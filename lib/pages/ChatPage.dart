@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:challenge1/constant/apiKey.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:chat_gpt_sdk/chat_gpt_sdk.dart' as gpt;
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class ChatPage extends StatefulWidget {
   const ChatPage({Key? key, required this.title}) : super(key: key);
@@ -30,13 +33,6 @@ class _ChatPageState extends State<ChatPage> {
   List<ChatMessage> msg = [];
   List<ChatUser> typingUsers = [];
 
-  final openAI = gpt.OpenAI.instance.build(
-    token: API_key,
-    baseOption: gpt.HttpSetup(
-      receiveTimeout: const Duration(seconds: 8)
-    ),
-    enableLog: true
-  );
 
   Future<void> getChatAIresponse(ChatMessage m) async {
     setState(() {
@@ -48,35 +44,27 @@ class _ChatPageState extends State<ChatPage> {
       msg.insert(0, m);
     });
 
-    List<Map<String, dynamic>> msgHistory = msg.reversed.map((m){
+
+    final apiUrl = "https://api.openai.com/v1/chat/completions";
+    final headers = {
+      "Content-type": "application/json",
+      "Authorization": "Bearer $API_key"
+    };
+
+    List msgHistory = msg.reversed.map((m){
       if(m.user == currUser){
-        return Map.of({"role": "user", "content": m.text});
+        return {"role": "user", "content": m.text};
       } else{
-          return Map.of({"role": "assistant", "content": m.text});
+          return {"role": "assistant", "content": m.text};
       }
     }).toList();
 
-    final request = gpt.ChatCompleteText(
-      model: gpt.Gpt4ChatModel(),
-      messages: msgHistory
-    );
+    final data = {"messages": msgHistory, "model": "o4-mini"};
 
-    print("request: ");
-    print(request);
-    final response = await openAI.onChatCompletion(request: request);
-    print("response: ");
+    final response = await http.post(Uri.parse(apiUrl), headers: headers, body: jsonEncode(data));
+
+    print("response:");
     print(response);
-
-    for(var txt in response!.choices){
-
-      if(txt.message != null){
-        print("txt: ");
-        print(txt.message);
-        setState(() {
-          msg.insert(0, ChatMessage(user: chatbot, createdAt: DateTime.now(), text: txt.message!.content));
-        });
-      }
-    }
 
     setState(() {
       typingUsers.remove(chatbot);
