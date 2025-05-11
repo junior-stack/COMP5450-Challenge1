@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:challenge1/constant/apiKey.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
-import 'package:chat_gpt_sdk/chat_gpt_sdk.dart' as gpt;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -25,16 +24,40 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  int _counter = 0;
 
   ChatUser currUser = ChatUser(id: '1');
-  ChatUser chatbot = ChatUser(id: '2');
+  ChatUser chatbot = ChatUser(id: '2', firstName: "ChatBot");
 
   List<ChatMessage> msg = [];
   List<ChatUser> typingUsers = [];
+  final String chatbotAPI = apiUrl;
+  final String model = "gpt-4.1";
+
+  // compile all previous messages into a list and send to the chatbot api to get response
+  Future<List<dynamic>> getChatBotAPIResponse(List<ChatMessage> msg) async{
+    final headers = {
+      "Content-type": "application/json",
+      "Authorization": "Bearer $API_key"
+    };
+
+    List msgHistory = msg.reversed.map((m){
+      if(m.user == currUser){
+        return {"role": "user", "content": m.text};
+      } else{
+        return {"role": "assistant", "content": m.text};
+      }
+    }).toList();
+
+    final data = {"messages": msgHistory, "model": model};
+
+    final response = await http.post(Uri.parse(apiUrl), headers: headers, body: jsonEncode(data));
+
+    return  jsonDecode(response.body)["choices"];
+  }
 
 
   Future<void> getChatAIresponse(ChatMessage m) async {
+    // display the chatbot is typing
     setState(() {
       typingUsers.add(chatbot);
     });
@@ -45,27 +68,18 @@ class _ChatPageState extends State<ChatPage> {
     });
 
 
-    final apiUrl = "https://api.openai.com/v1/chat/completions";
-    final headers = {
-      "Content-type": "application/json",
-      "Authorization": "Bearer $API_key"
-    };
+    final response = await getChatBotAPIResponse(msg);
 
-    List msgHistory = msg.reversed.map((m){
-      if(m.user == currUser){
-        return {"role": "user", "content": m.text};
-      } else{
-          return {"role": "assistant", "content": m.text};
+    // display the chatbot's response on screen
+    for(var txt in response){
+      if(txt["message"] != null){
+        setState(() {
+          msg.insert(0, ChatMessage(user: chatbot, createdAt: DateTime.now(), text: txt["message"]["content"], isMarkdown: true));
+        });
       }
-    }).toList();
+    }
 
-    final data = {"messages": msgHistory, "model": "o4-mini"};
-
-    final response = await http.post(Uri.parse(apiUrl), headers: headers, body: jsonEncode(data));
-
-    print("response:");
-    print(response);
-
+    // eliminate the typing status of chatbot
     setState(() {
       typingUsers.remove(chatbot);
     });
