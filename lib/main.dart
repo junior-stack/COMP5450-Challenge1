@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:challenge1/pages/ChatPage.dart';
+import 'package:challenge1/pages/ChatHistory.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,6 +27,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: const ChatPage(title: 'Flutter Demo Home Page'),
+      // home: const ChatHistory(),
     );
   }
 }
