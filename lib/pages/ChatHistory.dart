@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 class ChatHistory extends StatelessWidget {
   const ChatHistory({super.key});
 
@@ -22,14 +21,14 @@ class ChatItem {
   final String title;
   final String subtitle;
   final String date;
-  bool isPinned; // 用于标记是否置顶
+  bool isPinned; // Indicates whether the item is pinned
 
   ChatItem({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.date,
-    this.isPinned = false, // 默认未置顶
+    this.isPinned = false, // Default is not pinned
   });
 }
 
@@ -45,32 +44,32 @@ class _ChatRecords extends State<ChatRecords> {
     ChatItem(
       icon: 'latex_icon.png',
       title: 'LaTeX Subsections',
-      subtitle: 'Assistant: 在 LaTeX 中，\\subsectio...',
-      date: '4月2日',
+      subtitle: 'Assistant: In LaTeX, \\subsectio...',
+      date: 'Apr 2',
     ),
     ChatItem(
       icon: 'algorithm_icon.png',
       title: 'Algorithm Explanation',
       subtitle: 'ChatGPT-4o Latest: The algor...',
-      date: '3月20日',
+      date: 'Mar 20',
     ),
     ChatItem(
       icon: 'algorithm_icon.png',
-      title: '伪随机数发生成器',
+      title: 'Pseudo-Random Number Generator',
       subtitle: 'ChatGPT-4o Latest:',
-      date: '3月19日',
+      date: 'Mar 19',
     ),
     ChatItem(
       icon: 'soundex_icon.png',
       title: 'Soundex Algorithm',
-      subtitle: 'Deepseek-V3-FW: 望望的，**IPS...',
-      date: '3月7日',
+      subtitle: 'Deepseek-V3-FW: Looks like, **IPS...',
+      date: 'Mar 7',
     ),
     ChatItem(
       icon: 'claude_icon.png',
       title: 'Soundex Algorithm',
-      subtitle: 'Claude-3.5-Sonnet: 让我们仔细...',
-      date: '2月28日',
+      subtitle: 'Claude-3.5-Sonnet: Let’s take a closer look...',
+      date: 'February 28',
     ),
   ];
 
@@ -78,16 +77,12 @@ class _ChatRecords extends State<ChatRecords> {
     setState(() {
       final item = chatItems[index];
       if (!item.isPinned) {
-        // 如果未置顶，标记为置顶并移动到置顶区域
         item.isPinned = true;
         chatItems.removeAt(index);
-        // 找到第一个未置顶的 item 的位置
         int firstUnpinnedIndex = chatItems.indexWhere((item) => !item.isPinned);
         if (firstUnpinnedIndex == -1) {
-          // 如果所有 item 都置顶了，添加到最后
           chatItems.add(item);
         } else {
-          // 插入到最后一个置顶 item 之后
           chatItems.insert(firstUnpinnedIndex, item);
         }
       }
@@ -98,16 +93,12 @@ class _ChatRecords extends State<ChatRecords> {
     setState(() {
       final item = chatItems[index];
       if (item.isPinned) {
-        // 如果已置顶，标记为未置顶并移动到未置顶区域的顶部
         item.isPinned = false;
         chatItems.removeAt(index);
-        // 找到第一个未置顶的 item 的位置
         int firstUnpinnedIndex = chatItems.indexWhere((item) => !item.isPinned);
         if (firstUnpinnedIndex == -1) {
-          // 如果没有未置顶的 item，添加到最后
           chatItems.add(item);
         } else {
-          // 插入到未置顶区域的顶部
           chatItems.insert(firstUnpinnedIndex, item);
         }
       }
@@ -124,7 +115,7 @@ class _ChatRecords extends State<ChatRecords> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('聊天记录'),
+        title: const Text('Chat History'),
       ),
       body: chatItems.isEmpty
           ? const Center(
@@ -152,7 +143,7 @@ class _ChatRecords extends State<ChatRecords> {
             onDismissed: (direction) {
               _deleteItem(index);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${item.title} 已删除')),
+                SnackBar(content: Text('${item.title} deleted')),
               );
             },
             child: GestureDetector(
@@ -160,14 +151,14 @@ class _ChatRecords extends State<ChatRecords> {
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: Text(item.isPinned ? '取消置顶' : '置顶'),
+                    title: Text(item.isPinned ? 'Unpin' : 'Pin to Top'),
                     content: Text(item.isPinned
-                        ? '是否取消此聊天的置顶？'
-                        : '是否将此聊天置顶？'),
+                        ? 'Do you want to unpin this chat?'
+                        : 'Do you want to pin this chat to the top?'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('取消'),
+                        child: const Text('Cancel'),
                       ),
                       TextButton(
                         onPressed: () {
@@ -178,7 +169,7 @@ class _ChatRecords extends State<ChatRecords> {
                           }
                           Navigator.pop(context);
                         },
-                        child: const Text('确定'),
+                        child: const Text('Confirm'),
                       ),
                     ],
                   ),
@@ -189,9 +180,9 @@ class _ChatRecords extends State<ChatRecords> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     CircleAvatar(
-                      child: Text(item.icon[0]), // 模拟图标
+                      child: Text(item.icon[0]), // Simulated icon
                     ),
-                    if (item.isPinned) // 根据 isPinned 显示置顶图标
+                    if (item.isPinned)
                       const Padding(
                         padding: EdgeInsets.only(left: 8.0),
                         child: Icon(
