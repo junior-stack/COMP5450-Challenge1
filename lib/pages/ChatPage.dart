@@ -1,9 +1,14 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:challenge1/constant/apiKey.dart';
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:record/record.dart';
+import 'package:path/path.dart' as p;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ChatPage extends StatefulWidget {
   const ChatPage({Key? key, required this.title}) : super(key: key);
@@ -32,6 +37,9 @@ class _ChatPageState extends State<ChatPage> {
   List<ChatUser> typingUsers = [];
   final String chatbotAPI = apiUrl;
   final String model = "gpt-4.1";
+  final AudioRecorder audioRecorder = AudioRecorder();
+  bool isRecording = false;
+  String? recordingPath;
 
   // compile all previous messages into a list and send to the chatbot api to get response
   Future<List<dynamic>> getChatBotAPIResponse(List<ChatMessage> msg) async{
@@ -85,6 +93,46 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
+  Future<void> recordAudio () async{
+    if(isRecording){
+      String? filepath = await audioRecorder.stop();
+
+      if(filepath != null){
+        setState(() {
+          isRecording = false;
+          recordingPath = filepath;
+        });
+
+        var uri = Uri.parse(transcribeUrl);
+        var request = http.MultipartRequest('POST', uri)
+          ..headers['Authorization'] = "Bearer $API_key"
+          ..fields['model'] = 'whisper-1'
+          ..files.add(await http.MultipartFile.fromPath('file', recordingPath!,
+              filename: "recording.wav"));
+
+
+        var response = await request.send();
+        if (response.statusCode == 200) {
+          var responseData = await response.stream.bytesToString();
+          var result = json.decode(responseData);
+          ChatMessage chatMsg = ChatMessage(user: currUser, createdAt: DateTime.now(), text: result["text"]);
+          getChatAIresponse(chatMsg);
+        }
+      }
+    }
+    else{
+      if(await audioRecorder.hasPermission()){
+        final Directory appDocumentsDir = kIsWeb? Directory.current :await getApplicationDocumentsDirectory();
+        final String filepath = p.join(appDocumentsDir.path, "recording.wav");
+        await audioRecorder.start(const RecordConfig(encoder: AudioEncoder.wav), path: filepath);
+        setState(() {
+          isRecording = true;
+          recordingPath = null;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -102,7 +150,7 @@ class _ChatPageState extends State<ChatPage> {
       ),
       body: DashChat(currentUser: currUser, typingUsers: typingUsers, onSend: (ChatMessage m) async{
         await getChatAIresponse(m);
-      }, messages: msg)
+      },  inputOptions: InputOptions(trailing: [IconButton(onPressed: kIsWeb ? null : recordAudio, icon: isRecording ? Icon(Icons.stop) : Icon(Icons.mic))], inputDisabled: isRecording), messages: msg)
     );
   }
 }
