@@ -27,7 +27,6 @@ class UserInfoPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 头像 + 名字
             Center(
               child: Column(
                 children: [
@@ -42,7 +41,6 @@ class UserInfoPage extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // 分区标题
             Text(
               'ACCOUNT',
               style: TextStyle(
@@ -53,7 +51,6 @@ class UserInfoPage extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // 卡片
             Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
