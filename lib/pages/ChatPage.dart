@@ -103,7 +103,7 @@ class _ChatPageState extends State<ChatPage> {
           recordingPath = filepath;
         });
 
-        var uri = Uri.parse("https://api.openai.com/v1/audio/transcriptions");
+        var uri = Uri.parse(transcribeUrl);
         var request = http.MultipartRequest('POST', uri)
           ..headers['Authorization'] = "Bearer $API_key"
           ..fields['model'] = 'whisper-1'
@@ -122,7 +122,7 @@ class _ChatPageState extends State<ChatPage> {
     }
     else{
       if(await audioRecorder.hasPermission()){
-        final Directory appDocumentsDir = kIsWeb? Directory("F:/Temp") :await getApplicationDocumentsDirectory();
+        final Directory appDocumentsDir = kIsWeb? Directory.current :await getApplicationDocumentsDirectory();
         final String filepath = p.join(appDocumentsDir.path, "recording.wav");
         await audioRecorder.start(const RecordConfig(encoder: AudioEncoder.wav), path: filepath);
         setState(() {
@@ -150,7 +150,7 @@ class _ChatPageState extends State<ChatPage> {
       ),
       body: DashChat(currentUser: currUser, typingUsers: typingUsers, onSend: (ChatMessage m) async{
         await getChatAIresponse(m);
-      },  inputOptions: InputOptions(trailing: [IconButton(onPressed: recordAudio, icon: isRecording ? Icon(Icons.stop) : Icon(Icons.mic))]), messages: msg)
+      },  inputOptions: InputOptions(trailing: [IconButton(onPressed: kIsWeb ? null : recordAudio, icon: isRecording ? Icon(Icons.stop) : Icon(Icons.mic))], inputDisabled: isRecording), messages: msg)
     );
   }
 }
