@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:challenge1/pages/ChatPage.dart';
 import 'package:challenge1/widgets/ChatHistoryWidget.dart';
 import 'package:challenge1/database/chat_history_db.dart';
+import 'package:challenge1/pages/UserInfoPage.dart';
+import 'package:challenge1/constant/global.dart';
+
 
 class ChatHistoryPage extends StatefulWidget {
   const ChatHistoryPage({Key? key}) : super(key: key);
@@ -10,12 +13,40 @@ class ChatHistoryPage extends StatefulWidget {
   State<ChatHistoryPage> createState() => _ChatHistoryPageState();
 }
 
-class _ChatHistoryPageState extends State<ChatHistoryPage> {
+class _ChatHistoryPageState extends State<ChatHistoryPage> with RouteAware {
   int _selectedIndex = 0;
 
   List<Map<String, dynamic>> chatHistory = [];
+  int maxSession = 0;
   final List<String> models = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'];
   String selectedModel = 'gpt-3.5-turbo';
+  void goToProfilePage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const UserInfoPage()),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final modalRoute = ModalRoute.of(context);
+    if (modalRoute is PageRoute) {
+      routeObserver.subscribe(this, modalRoute);
+    }
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    // Called when coming back to this screen
+    loadHistory(); // Refresh or call API
+  }
 
   @override
   void initState() {
@@ -25,19 +56,12 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
 
   // Fetch history from the SQLite DB
   Future<void> loadHistory() async {
-    final data = await ChatHistoryDB().fetchHistory();
+    final List<Map<String, dynamic>> data = await ChatHistoryDB().fetchHistory();
+    final int maxSessionID = data.length;
     setState(() {
       chatHistory = data;
+      maxSession = maxSessionID;
     });
-  }
-
-  // Insert new chat into the DB
-  void addChatHistory(String title, DateTime timestamp) async {
-    await ChatHistoryDB().insertHistory(title, timestamp);
-    loadHistory(); // refresh UI
-  }
-
-  void goToProfilePage() {
   }
 
   void _onItemTapped(int index) {
@@ -47,6 +71,7 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
         MaterialPageRoute(
           builder: (context) => ChatPage(
             title: 'New Chat',
+            session: maxSession,
           ),
         ),
       );
@@ -129,10 +154,17 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> {
           Expanded(
             child: ChatHistoryWidget(
               chatHistory: chatHistory,
-              onTapItem: (title) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Tapped: $title")),
+              onTapItem: (sid) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatPage(
+                      title: 'Chat Page',
+                      session: sid,
+                    ),
+                  ),
                 );
+
               },
             ),
           ),

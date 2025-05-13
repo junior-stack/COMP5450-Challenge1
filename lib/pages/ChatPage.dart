@@ -9,9 +9,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:challenge1/database/chat_history_db.dart';
 
 class ChatPage extends StatefulWidget {
-  const ChatPage({Key? key, required this.title}) : super(key: key);
+  const ChatPage({Key? key, required this.title, required this.session}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -23,6 +24,7 @@ class ChatPage extends StatefulWidget {
   // always marked "final".
 
   final String title;
+  final int session;
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -81,9 +83,13 @@ class _ChatPageState extends State<ChatPage> {
     // display the chatbot's response on screen
     for(var txt in response){
       if(txt["message"] != null){
+        ChatMessage reply = ChatMessage(user: chatbot, createdAt: DateTime.now(), text: txt["message"]["content"], isMarkdown: true);
         setState(() {
-          msg.insert(0, ChatMessage(user: chatbot, createdAt: DateTime.now(), text: txt["message"]["content"], isMarkdown: true));
+          msg.insert(0, reply);
         });
+
+        await ChatHistoryDB().insertHistory(m.text, m.createdAt, "user", widget.session);
+        await ChatHistoryDB().insertHistory(reply.text, reply.createdAt, "chatbot", widget.session);
       }
     }
 
@@ -131,6 +137,19 @@ class _ChatPageState extends State<ChatPage> {
         });
       }
     }
+  }
+
+  Future<void> loadMessage() async {
+    final List<Map<String, dynamic>> data = await ChatHistoryDB().fetchMessage(widget.session);
+    setState(() {
+      msg = data.reversed.map((item) => ChatMessage(user: item["role"] == "user" ? currUser : chatbot, createdAt: DateTime.parse(item["timestamp"]), text: item["message"], isMarkdown: true)).toList();
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadMessage();
   }
 
   @override

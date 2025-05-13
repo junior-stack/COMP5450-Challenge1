@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'ChatPage.dart';
 import 'UserDatabase.dart';
 import 'SignupPage.dart';
+import 'ChatHistoryPage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -31,7 +32,7 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) => const ChatPage(title: 'Welcome to Chat Page'),
+          builder: (context) => const ChatHistoryPage(), //To go to the main page
         ),
       );
     } else {

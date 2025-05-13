@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class ChatHistoryWidget extends StatelessWidget {
   final List<Map<String, dynamic>> chatHistory;
-  final Function(String title)? onTapItem;
+  final Function(int sessionID)? onTapItem;
 
   const ChatHistoryWidget({
     Key? key,
@@ -35,11 +35,11 @@ class ChatHistoryWidget extends StatelessWidget {
         final chat = chatHistory[index];
         return ListTile(
           leading: const Icon(Icons.chat),
-          title: Text(chat['title']),
+          title: Text(chat['message']),
           subtitle: Text(chat['timestamp'].toString()),
           onTap: () {
             if (onTapItem != null) {
-              onTapItem!(chat['title']);
+              onTapItem!(chat['session']);
             }
           },
         );
