@@ -33,17 +33,21 @@ class ChatHistoryDB {
     await db.execute('''
       CREATE TABLE history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
+        session INTEGER NOT NULL,
+        message TEXT NOT NULL,
+        role TEXT NOT NULL,
         timestamp TEXT NOT NULL
       )
     ''');
   }
 
   // insert a new chat entry into the history table
-  Future<void> insertHistory(String title, DateTime timestamp) async {
+  Future<void> insertHistory(String message, DateTime timestamp, String role, int session) async {
     final db = await database;
     await db.insert('history', {
-      'title': title,
+      'session': session,
+      'message': message,
+      'role': role,
       'timestamp': timestamp.toIso8601String(),
     });
   }
@@ -51,7 +55,12 @@ class ChatHistoryDB {
   // sort from newest to oldest
   Future<List<Map<String, dynamic>>> fetchHistory() async {
     final db = await database;
-    return await db.query('history', orderBy: 'timestamp DESC');
+    return await db.rawQuery("SELECT * FROM history WHERE id IN (SELECT MIN(id) FROM history GROUP BY session)");
+  }
+
+  Future<List<Map<String, dynamic>>> fetchMessage(int sessionID) async {
+    final db = await database;
+    return await db.query("history", where: "session = ?", whereArgs: [sessionID]);
   }
 
   Future<void> clearAll() async {
