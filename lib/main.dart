@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Chat AI App',
       theme: ThemeData(primarySwatch: Colors.deepPurple),
-      home: const ChatHistoryPage(),
+      home: const LoginPage(),
       navigatorObservers: [routeObserver],
     );
   }
