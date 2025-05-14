@@ -18,8 +18,8 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> with RouteAware {
 
   List<Map<String, dynamic>> chatHistory = [];
   int maxSession = 0;
-  final List<String> models = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo'];
-  String selectedModel = 'gpt-3.5-turbo';
+  final List<String> models = ['small', 'medium', 'large'];
+  String selectedModel = 'small';
   void goToProfilePage() {
     Navigator.push(
       context,
@@ -116,7 +116,7 @@ class _ChatHistoryPageState extends State<ChatHistoryPage> with RouteAware {
             child: DropdownButtonFormField<String>(
               value: selectedModel,
               decoration: const InputDecoration(
-                labelText: 'GPTModel',
+                labelText: 'ChatBotModel',
                 labelStyle: TextStyle(fontWeight: FontWeight.w500),
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
